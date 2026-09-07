@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import app from './app.js';
+import app, { isOriginAllowed } from './app.js';
 import connectDatabase from './config/database.js';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -15,9 +15,13 @@ const PORT = process.env.PORT || 5000;
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.NODE_ENV === 'production'
-      ? process.env.CLIENT_URL?.split(',') || 'http://localhost:5173'
-      : '*',
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     credentials: true
   }
 });
